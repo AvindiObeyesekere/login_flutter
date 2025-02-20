@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'gradient_button.dart';
 import 'signup_screen.dart';
-// import 'home_screen.dart';
-import 'package:login_authentication/resources/api_service.dart'; // Import your api_service
-// import 'package:login_authentication/resources/database/database_helper.dart'; // Import your database_helper
+import 'package:login_authentication/resources/api_service.dart';
+import 'package:login_authentication/resources/database_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,27 +15,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _apiService = ApiService();
+  final _dbHelper = DatabaseHelper();
+  bool _isLoading = false; // Track loading state
 
-  void _signIn() async {
-    final username = _usernameController.text;
-    final password = _passwordController.text;
+ void _signIn() async {
+  final username = _usernameController.text.trim();
+  final password = _passwordController.text.trim();
 
-    final response = await _apiService.login(username, password);
+  final response = await _apiService.login(username, password);
 
-    if (response['Status_Code'] == 200 && response['Response_Body'] != null) {
-      // Successful login
-      final userData = response['Response_Body'][0];
-      print("User Data: $userData"); // Save to database
+  if (response['Status_Code'] == 200 && response['Response_Body'] != null) {
+    final userData = response['Response_Body'][0];
+    print("User Data: $userData");
 
-      // Navigate to next screen
-      Navigator.pushReplacementNamed(context, '/home'); // Example navigation
-    } else {
-      // Handle error
-      final errorMessage = response['Message'] ?? 'Login failed';
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(errorMessage)));
-    }
+    // Save user data to SQLite
+    await _dbHelper.insertUser(userData);
+
+    // Navigate to home screen
+    Navigator.pushReplacementNamed(context, '/home');
+  } else {
+    final errorMessage = response['Message'] ?? 'Login failed';
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(errorMessage)));
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,14 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      "Sign In",
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
+                    Text("Sign In", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     SizedBox(height: 20),
                     TextField(
-                      controller: _usernameController, // Add controller
+                      controller: _usernameController,
                       decoration: InputDecoration(
                         hintText: "Enter Email",
                         filled: true,
@@ -77,13 +76,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                        contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                       ),
                     ),
                     SizedBox(height: 10),
                     TextField(
-                      controller: _passwordController, // Add controller
+                      controller: _passwordController,
                       decoration: InputDecoration(
                         labelText: "Password",
                         filled: true,
@@ -92,28 +90,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                        contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                       ),
                       obscureText: true,
                     ),
                     SizedBox(height: 10),
                     Row(
                       children: [
-                        Checkbox(value: true, onChanged: (value) {}),
+                        Checkbox(value: false, onChanged: (value) {}),
                         Text("Remember me"),
                         Spacer(),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text("Forgot password?"),
-                        )
+                        TextButton(onPressed: () {}, child: Text("Forgot password?"))
                       ],
                     ),
                     SizedBox(height: 10),
-                    GradientButton(
-                      text: "Sign In",
-                      onPressed: _signIn, // Call _signIn on button press
-                    ),
+                    _isLoading
+                        ? CircularProgressIndicator() // Show a loading spinner while logging in
+                        : GradientButton(
+                            text: "Sign In",
+                            onPressed: _signIn,
+                          ),
                     SizedBox(height: 10),
                     Text("Sign in with"),
                     SizedBox(height: 10),
@@ -143,8 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                    builder: (context) => SignUpScreen()),
+                                MaterialPageRoute(builder: (context) => SignUpScreen()),
                               );
                             },
                             style: OutlinedButton.styleFrom(

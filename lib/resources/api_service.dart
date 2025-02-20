@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'database_helper.dart'; // Assuming DatabaseHelper is in a separate file
 
 class ApiService {
-  final String apiUrl = 'https://api.ezuite.com/api/External_Api/Mobile_Api/Invoke'; // Corrected URL
+  final String apiUrl = 'https://api.ezuite.com/api/External_Api/Mobile_Api/Invoke';
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
+  // Login and save user data
   Future<Map<String, dynamic>> login(String username, String password) async {
     final Map<String, dynamic> requestBody = {
       'API_Body': [
@@ -23,26 +26,24 @@ class ApiService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
 
-        // Check for API-specific success (Status_Code 200 in the response)
         if (responseData['Status_Code'] == 200) {
-          return responseData; // Return the full successful response
+          List<dynamic> responseBody = responseData['Response_Body'];
+          if (responseBody.isNotEmpty) {
+            // Save user data to database
+            await _dbHelper.insertUser(responseBody[0]);
+          }
+          return responseData;
         } else {
-          // API-specific error
           print('API Error: ${responseData['Status_Code']} - ${responseData['Message']}');
-          return responseData; // Return the API error response
+          return responseData;
         }
       } else {
-        // HTTP error
         print('HTTP Error: ${response.statusCode} - ${response.body}');
-        return {
-          'Status_Code': response.statusCode,
-          'Message': 'HTTP request failed'
-        }; // HTTP error
+        return {'Status_Code': response.statusCode, 'Message': 'HTTP request failed'};
       }
     } catch (e) {
-      // Network or other error
       print('Error: $e');
-      return {'Status_Code': null, 'Message': 'An error occurred'}; // General error
+      return {'Status_Code': null, 'Message': 'An error occurred'};
     }
   }
 }
