@@ -4,7 +4,7 @@ class GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
 
-  GradientButton({required this.text, required this.onPressed});
+  const GradientButton({super.key, required this.text, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -13,8 +13,8 @@ class GradientButton extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: RadialGradient(
           center: Alignment.center,
-          radius: 1.0,
-          colors: [Colors.cyan, Colors.blue],
+          radius: 4.0,
+          colors: [const Color.fromARGB(255, 223, 145, 21), const Color.fromARGB(255, 229, 7, 44)],
         ),
         borderRadius: BorderRadius.circular(8),
       ),

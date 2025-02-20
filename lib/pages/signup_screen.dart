@@ -3,6 +3,8 @@ import 'gradient_button.dart';
 import 'login_screen.dart';
 
 class SignUpScreen extends StatelessWidget {
+  const SignUpScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,7 +15,7 @@ class SignUpScreen extends StatelessWidget {
             width: double.infinity,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/background.png'),
+                image: AssetImage('assets/bg.jpeg'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -126,7 +128,6 @@ class SignUpScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text("Sign In"),
                       style: OutlinedButton.styleFrom( // White fill and styling
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.black,
@@ -136,6 +137,7 @@ class SignUpScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                       ),
+                      child: Text("Sign In"),
                     ),
 
                   ],
